@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"runtime"
 	"time"
 )
 
@@ -24,6 +25,47 @@ func NewLogger(level, handlerType int) *Logger {
 	return &Logger{
 		lg: slog.New(slogHandler(handlerType, opts)),
 	}
+}
+
+func (r *Logger) Debug(message interface{}, args ...interface{}) {
+	r.lg.Debug(r.toString(message), buildLoggerArgs(args)...)
+}
+
+func (r *Logger) Info(message string, args ...interface{}) {
+	r.lg.Info(message, buildLoggerArgs(args)...)
+}
+
+func (r *Logger) Warn(message string, args ...interface{}) {
+	r.lg.Warn(message, buildLoggerArgs(args)...)
+}
+
+func (r *Logger) Error(message interface{}, args ...interface{}) {
+	r.lg.Error(r.toString(message), buildLoggerArgs(args)...)
+}
+
+func (r *Logger) Fatal(message interface{}, args ...interface{}) {
+	r.lg.Error(r.toString(message), buildLoggerArgs(args)...)
+
+	os.Exit(1)
+}
+
+func (r *Logger) toString(message interface{}) string {
+	var msg string
+
+	switch v := message.(type) {
+	case error:
+		msg = v.Error()
+	case string:
+		msg = v
+	default:
+		msg = fmt.Sprintf("something: %s", v)
+	}
+
+	return msg
+}
+
+func (r *Logger) Timing(message string, starting time.Time) {
+	r.lg.Debug(message, "time", time.Now().Sub(starting).String())
 }
 
 func slogLeveler(level int) slog.Leveler {
@@ -52,73 +94,12 @@ func slogHandler(handlerType int, opts *slog.HandlerOptions) slog.Handler {
 	}
 }
 
-func (r *Logger) Debug(message interface{}, args ...interface{}) {
-	if len(args) == 0 {
-		r.lg.Debug(r.toString(message))
-		return
-	}
+func buildLoggerArgs(args []interface{}) []interface{} {
+	out := make([]interface{}, 0)
+	_, filename, line, _ := runtime.Caller(2)
 
-	out := make([]interface{}, 0, len(args))
-	r.lg.Debug(r.toString(message), append(out, args...)...)
-}
+	out = append(out, args...)
+	out = append(out, []interface{}{"filename", filename, "line", line}...)
 
-func (r *Logger) Info(message string, args ...interface{}) {
-	if len(args) == 0 {
-		r.lg.Debug(r.toString(message))
-		return
-	}
-
-	out := make([]interface{}, 0, len(args))
-	r.lg.Info(message, append(out, args...)...)
-}
-
-func (r *Logger) Warn(message string, args ...interface{}) {
-	if len(args) == 0 {
-		r.lg.Debug(r.toString(message))
-		return
-	}
-
-	out := make([]interface{}, 0, len(args))
-	r.lg.Warn(message, append(out, args...)...)
-}
-
-func (r *Logger) Error(message interface{}, args ...interface{}) {
-	if len(args) == 0 {
-		r.lg.Debug(r.toString(message))
-		return
-	}
-
-	out := make([]interface{}, 0, len(args))
-	r.lg.Error(r.toString(message), append(out, args...)...)
-}
-
-func (r *Logger) Fatal(message interface{}, args ...interface{}) {
-	if len(args) == 0 {
-		r.lg.Debug(r.toString(message))
-		return
-	}
-
-	out := make([]interface{}, 0, len(args))
-	r.lg.Error(r.toString(message), append(out, args...)...)
-
-	os.Exit(1)
-}
-
-func (r *Logger) toString(message interface{}) string {
-	var msg string
-
-	switch v := message.(type) {
-	case error:
-		msg = v.Error()
-	case string:
-		msg = v
-	default:
-		msg = fmt.Sprintf("something: %s", v)
-	}
-
-	return msg
-}
-
-func (r *Logger) Timing(message string, starting time.Time) {
-	r.lg.Debug(message, "time", time.Now().Sub(starting).String())
+	return out
 }
