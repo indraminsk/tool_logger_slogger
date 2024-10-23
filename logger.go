@@ -58,7 +58,7 @@ func (r *Logger) Debug(message interface{}, args ...interface{}) {
 		return
 	}
 
-	out := []interface{}{"args"}
+	out := make([]interface{}, 0, len(args))
 	r.lg.Debug(r.toString(message), append(out, args...)...)
 }
 
@@ -68,7 +68,7 @@ func (r *Logger) Info(message string, args ...interface{}) {
 		return
 	}
 
-	out := []interface{}{"args"}
+	out := make([]interface{}, 0, len(args))
 	r.lg.Info(message, append(out, args...)...)
 }
 
@@ -78,7 +78,7 @@ func (r *Logger) Warn(message string, args ...interface{}) {
 		return
 	}
 
-	out := []interface{}{"args"}
+	out := make([]interface{}, 0, len(args))
 	r.lg.Warn(message, append(out, args...)...)
 }
 
@@ -88,7 +88,7 @@ func (r *Logger) Error(message interface{}, args ...interface{}) {
 		return
 	}
 
-	out := []interface{}{"args"}
+	out := make([]interface{}, 0, len(args))
 	r.lg.Error(r.toString(message), append(out, args...)...)
 }
 
@@ -98,7 +98,7 @@ func (r *Logger) Fatal(message interface{}, args ...interface{}) {
 		return
 	}
 
-	out := []interface{}{"args"}
+	out := make([]interface{}, 0, len(args))
 	r.lg.Error(r.toString(message), append(out, args...)...)
 
 	os.Exit(1)
